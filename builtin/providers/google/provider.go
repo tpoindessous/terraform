@@ -54,6 +54,7 @@ func Provider() terraform.ResourceProvider {
 
 		DataSourcesMap: map[string]*schema.Resource{
 			"google_compute_network":           dataSourceGoogleComputeNetwork(),
+			"google_compute_snapshot":          dataSourceGoogleComputeSnapshot(),
 			"google_compute_subnetwork":        dataSourceGoogleComputeSubnetwork(),
 			"google_compute_zones":             dataSourceGoogleComputeZones(),
 			"google_container_engine_versions": dataSourceGoogleContainerEngineVersions(),
