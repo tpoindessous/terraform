@@ -24,7 +24,7 @@ func dataSourceGoogleComputeSnapshot() *schema.Resource {
 			//"filter": dataSourceFiltersSchema(),
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"description": &schema.Schema{
@@ -104,15 +104,27 @@ func dataSourceGoogleComputeSnapshotRead(d *schema.ResourceData, meta interface{
 	labels := d.Get("labels").(map[string]interface{})
 	log.Printf("[DEBUG] Labels %s", labels)
 
-
 	if len(labels) > 0 {
 		filter := ""
 		log.Printf("[DEBUG] Labels length : %d", len(labels))
 		for k, v := range labels {
 			log.Printf("[DEBUG] Label key : '%s', value : '%s'", k, v)
-			filter = fmt.Sprintf("%s (labels.%s eq %s)", filter, k, v)
+			filter = fmt.Sprintf("%s(labels.%s eq %s)", filter, k, v)
 		}
 		log.Printf("[DEBUG] Labels filter : %s", filter)
+		snapshotList, err := config.clientCompute.Snapshots.List(project).Filter(filter).Do()
+		if err != nil {
+			return fmt.Errorf("Snapshot, error while Listing with filter '%s' ", filter)
+		}
+		log.Printf("[DEBUG] SnapshotList length : %d", len(snapshotList.Items))
+
+		if len(snapshotList.Items) > 1 {
+			return fmt.Errorf("Snapshot : too many snapshots found with these tags")
+		} else if len(snapshotList.Items) == 0 {
+			return fmt.Errorf("Snapshot : no snapshot found with these tags")
+		} else {
+			d.Set("name", snapshotList.Items[0].Name)
+		}
 	}
 
 	snapshot, err := config.clientCompute.Snapshots.Get(
